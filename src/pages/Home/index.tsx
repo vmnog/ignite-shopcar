@@ -3,8 +3,8 @@ import { MdAddShoppingCart } from "react-icons/md";
 
 import { ProductList } from "./styles";
 import { api } from "../../services/api";
-// import { formatPrice } from "../../util/format";
 import { useCart } from "../../hooks/useCart";
+import { formatPrice } from "../../util/format";
 
 interface Product {
   id: number;
@@ -26,15 +26,20 @@ const Home = (): JSX.Element => {
   const { addProduct, cart } = useCart();
 
   const cartItemsAmount = cart.reduce((sumAmount, product) => {
-    return {
-      ...sumAmount,
-      [product.id]: sumAmount[product.id] + 1 || product.amount,
-    };
+    const newSumAmount = { ...sumAmount };
+    newSumAmount[product.id] = product.amount;
+
+    return newSumAmount;
   }, {} as CartItemsAmount);
 
   useEffect(() => {
     async function loadProducts() {
-      const { data } = await api.get("products");
+      const response = await api.get<Product[]>("products");
+
+      const data = response.data.map((product) => ({
+        ...product,
+        priceFormatted: formatPrice(product.price),
+      }));
 
       setProducts(data);
     }
